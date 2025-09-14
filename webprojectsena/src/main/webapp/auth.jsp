@@ -1,6 +1,6 @@
 <%-- 
-    Document   : registro
-    Created on : 10/09/2025, 10:17:39 a. m.
+    Document   : registrationApp
+    Created on : 11/09/2025, 12:58:40 p. m.
     Author     : joset
 --%>
 
@@ -13,7 +13,7 @@
     </head>
     <body>
         <h1>Crear nuevo usuario</h1>
-        <form action="RegistroServlet" method="post">
+        <form action="./registroExitoso.jsp" method="post">
             <label for="nombre">Nombre:</label><br>
             <input type="text" id="nombre" name="nombre"><br><br>
 

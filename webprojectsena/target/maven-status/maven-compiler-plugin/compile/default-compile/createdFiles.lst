@@ -1,15 +1,13 @@
 models\course\CourseManager.class
+com\websena\servlets\AuthLogic.class
 models\exam\Exam.class
 models\user\inscription\Inscription.class
 models\user\docent\Docent.class
 models\course\module\Module.class
 models\user\certification\Certification.class
-com\websena\servlets\RegistrationApp.class
 models\answer\Answer.class
-com\websena\servlets\RegistroWeb.class
 models\course\Course.class
 com\sena\webprojectsena\resources\JakartaEE11Resource.class
 models\course\lesson\Lesson.class
 models\exam\question\Question.class
-com\sena\webprojectsena\JakartaRestConfiguration.class
 User\User.class
