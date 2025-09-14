@@ -13,5 +13,9 @@
     </head>
     <body>
         <h1>Te registraste con exito</h1>
+        
+        <a href="dashboard.jsp">
+            <button>Ir a Dashboard</button>
+        </a>
     </body>
 </html>
