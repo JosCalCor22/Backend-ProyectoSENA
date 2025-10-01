@@ -304,8 +304,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.0/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        const PASSWORD = Hola1234@
-        const EMAIL = admin@example.com
+        const PASSWORD = "Hola1234@"
+        const EMAIL = "admin@example.com"
         
         // Validación en tiempo real de la contraseña
         document.getElementById('regPassword').addEventListener('input', function() {
