@@ -4,7 +4,6 @@
  */
 package com.websena.servlets;
 
-import User.User;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -17,25 +16,32 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-@WebServlet(name = "AuthServlet", urlPatterns = {"/auth"})
+// Captura /auth, /auth/login, /auth/signup, etc.
+@WebServlet(name = "AuthServlet", urlPatterns = {"/auth/*"})
 public class AuthServlet extends HttpServlet {
     
-    // Simulamos una base de datos simple con usuarios válidos
+    // (Tu código de simulación de base de datos permanece igual)
     private static final Map<String, String> validUsers = new HashMap<>();
+    private static final Map<String, String> userRoles = new HashMap<>(); // Simulación de roles
+    
     private static final String VALID_EMAIL = "admin@example.com";
     private static final String VALID_PASSWORD = "123456789";
     
     static {
         validUsers.put(VALID_EMAIL, VALID_PASSWORD);
-        // Puedes agregar más usuarios aquí
+        userRoles.put(VALID_EMAIL, "docente"); 
+        
         validUsers.put("usuario@test.com", "password123");
+        userRoles.put("usuario@test.com", "estudiante");
     }
     
-    // Patrón para validar email
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
-        "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"
+            "^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$"
     );
     
+    // El método doPost permanece igual, apuntan correctamente a /auth (gracias al getContextPath())
+    // y la lógica de 'action' sigue funcionando.
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
@@ -46,10 +52,14 @@ public class AuthServlet extends HttpServlet {
             case "register" -> handleRegister(request, response);
             case "logout" -> handleLogout(request, response);
             default -> {
+                response.sendRedirect(request.getContextPath() + "/auth/login");
             }
         }
     }
     
+
+    // Este método maneja las recargas de página (peticiones GET)
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
@@ -57,10 +67,24 @@ public class AuthServlet extends HttpServlet {
         
         if ("logout".equals(action)) {
             handleLogout(request, response);
-        } else {
-            // Mostrar la página de login por defecto
-            request.getRequestDispatcher("/auth.jsp").forward(request, response);
+            return; // Importante: Salir después de manejar el logout
+        } 
+        
+        // Nueva lógica para manejar las rutas /auth/login y /auth/signup
+        String pathInfo = request.getPathInfo(); // Obtiene la parte de la URL después de /auth
+        
+        String activeTab = "login"; // Pestaña por defecto
+        
+        if (pathInfo != null) {
+            if (pathInfo.equals("/signup")) {
+                activeTab = "register";
+            }
+            // Si es /login o cualquier otra cosa, se queda como "login"
         }
+        
+        // Establecemos la pestaña activa y mostramos el JSP
+        request.setAttribute("activeTab", activeTab);
+        request.getRequestDispatcher("/auth.jsp").forward(request, response);
     }
     
     private void handleLogin(HttpServletRequest request, HttpServletResponse response)
@@ -69,30 +93,32 @@ public class AuthServlet extends HttpServlet {
         String email = request.getParameter("email");
         String password = request.getParameter("password");
         
-        // Validar campos vacíos
+        // (Validaciones de campos vacíos y formato de email...)
         if (email == null || email.trim().isEmpty() || 
             password == null || password.trim().isEmpty()) {
             
             request.setAttribute("error", "Todos los campos son obligatorios");
             request.setAttribute("errorType", "empty_fields");
+            request.setAttribute("activeTab", "login"); // Asegurar pestaña
             request.getRequestDispatcher("/auth.jsp").forward(request, response);
             return;
         }
         
-        // Validar formato de email
         if (!EMAIL_PATTERN.matcher(email.trim()).matches()) {
             request.setAttribute("error", "El formato del correo electrónico es inválido");
             request.setAttribute("errorType", "invalid_email");
+            request.setAttribute("activeTab", "login"); // Asegurar pestaña
             request.getRequestDispatcher("/auth.jsp").forward(request, response);
             return;
         }
         
-        // Validar credenciales
+        // (Validación de credenciales...)
         if (!validUsers.containsKey(email.trim()) || 
             !validUsers.get(email.trim()).equals(password)) {
             
             request.setAttribute("error", "Credenciales incorrectas");
             request.setAttribute("errorType", "invalid_credentials");
+            request.setAttribute("activeTab", "login"); // Asegurar pestaña
             request.getRequestDispatcher("/auth.jsp").forward(request, response);
             return;
         }
@@ -101,10 +127,11 @@ public class AuthServlet extends HttpServlet {
         HttpSession session = request.getSession();
         session.setAttribute("user", email.trim());
         session.setAttribute("isLoggedIn", true);
+        String role = userRoles.get(email.trim()); 
+        session.setAttribute("role", role); 
         
-        request.setAttribute("success", "Sesión iniciada correctamente");
-        request.setAttribute("successType", "login_success");
-        request.getRequestDispatcher("/dashboard.jsp").forward(request, response);
+        // Usamos sendRedirect para el patrón PRG
+        response.sendRedirect(request.getContextPath() + "/dashboard.jsp");
     }
     
     private void handleRegister(HttpServletRequest request, HttpServletResponse response)
@@ -113,11 +140,13 @@ public class AuthServlet extends HttpServlet {
         String email = request.getParameter("regEmail");
         String password = request.getParameter("regPassword");
         String confirmPassword = request.getParameter("confirmPassword");
+        String role = request.getParameter("role");
         
-        // Validar campos vacíos
+        // (Todas tus validaciones de registro permanecen igual)
         if (email == null || email.trim().isEmpty() || 
             password == null || password.trim().isEmpty() ||
-            confirmPassword == null || confirmPassword.trim().isEmpty()) {
+            confirmPassword == null || confirmPassword.trim().isEmpty() ||
+            role == null || role.trim().isEmpty()) {
             
             request.setAttribute("error", "Todos los campos son obligatorios");
             request.setAttribute("errorType", "empty_fields");
@@ -126,7 +155,6 @@ public class AuthServlet extends HttpServlet {
             return;
         }
         
-        // Validar formato de email
         if (!EMAIL_PATTERN.matcher(email.trim()).matches()) {
             request.setAttribute("error", "El formato del correo electrónico es inválido");
             request.setAttribute("errorType", "invalid_email");
@@ -135,7 +163,6 @@ public class AuthServlet extends HttpServlet {
             return;
         }
         
-        // Validar que solo el correo preexistente puede registrarse
         if (!VALID_EMAIL.equals(email.trim())) {
             request.setAttribute("error", "Este correo electrónico no está autorizado para el registro");
             request.setAttribute("errorType", "invalid_email");
@@ -143,8 +170,15 @@ public class AuthServlet extends HttpServlet {
             request.getRequestDispatcher("/auth.jsp").forward(request, response);
             return;
         }
+
+        if (!"estudiante".equals(role) && !"docente".equals(role)) {
+            request.setAttribute("error", "El tipo de usuario no es válido");
+            request.setAttribute("errorType", "invalid_role");
+            request.setAttribute("activeTab", "register");
+            request.getRequestDispatcher("/auth.jsp").forward(request, response);
+            return;
+        }
         
-        // Validar longitud de contraseña
         if (password.length() < 8) {
             request.setAttribute("error", "La contraseña debe tener al menos 8 caracteres");
             request.setAttribute("errorType", "short_password");
@@ -153,7 +187,6 @@ public class AuthServlet extends HttpServlet {
             return;
         }
         
-        // Validar que las contraseñas coincidan
         if (!password.equals(confirmPassword)) {
             request.setAttribute("error", "Las contraseñas no coinciden");
             request.setAttribute("errorType", "password_mismatch");
@@ -162,11 +195,13 @@ public class AuthServlet extends HttpServlet {
             return;
         }
         
-        // Registro exitoso (en un caso real, aquí guardarías en base de datos)
+        // Registro exitoso
         validUsers.put(email.trim(), password);
+        userRoles.put(email.trim(), role); 
         
         request.setAttribute("success", "Registro exitoso. Ya puedes iniciar sesión");
         request.setAttribute("successType", "register_success");
+        request.setAttribute("activeTab", "login"); 
         request.getRequestDispatcher("/auth.jsp").forward(request, response);
     }
     
@@ -180,6 +215,7 @@ public class AuthServlet extends HttpServlet {
         
         request.setAttribute("success", "Sesión cerrada correctamente");
         request.setAttribute("successType", "logout_success");
+        request.setAttribute("activeTab", "login"); // Al cerrar sesión, mostrar login
         request.getRequestDispatcher("/auth.jsp").forward(request, response);
     }
 }
