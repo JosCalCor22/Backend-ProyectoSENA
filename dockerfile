@@ -21,7 +21,10 @@ COPY pom.xml .
 RUN mvn dependency:go-offline
 
 # Copiamos todo el código fuente
-COPY src/ /app/src/
+## En este proyecto el código fuente está en la carpeta `main/` (no en `src/`).
+## Copiamos `main/` dentro de `src/main/` para cumplir la convención de Maven
+## (src/main/java, src/main/resources, webapp, etc.).
+COPY main/ /app/src/main/
 
 # Compilamos el proyecto y generamos el .WAR
 # Esto ejecuta tus tests, si quieres saltarlos usa: mvn package -DskipTests
