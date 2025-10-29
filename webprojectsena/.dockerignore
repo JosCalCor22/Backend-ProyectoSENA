@@ -1,0 +1,10 @@
+# Ignorar la carpeta 'target' que se genera localmente
+target/
+
+# Ignorar archivos de IDE
+.idea/
+.vscode/
+*.iml
+
+# Ignorar logs
+*.log
